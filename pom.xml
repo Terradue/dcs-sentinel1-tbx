@@ -119,7 +119,7 @@
 						<provide>${project.artifactId}</provide>
 					</provides>
 					<requires>
-						<require>sentinel1-toolbox</require>
+						<require>sentinel1-tbx</require>
 					</requires>
 					<needarch>true</needarch>
 				</configuration>
