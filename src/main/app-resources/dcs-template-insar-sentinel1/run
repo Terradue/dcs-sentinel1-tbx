@@ -7,11 +7,12 @@ source ${ciop_job_include}
 
 # define the exit codes
 SUCCESS=0
-ERR_GETDATA=10
-ERR_DOWNLOAD=20
-ERR_EXTRACT=30
-ERR_PROCESS=40
-ERR_PUBLISH=50
+ERR_INPUT=10
+ERR_GETDATA=20
+ERR_DOWNLOAD=30
+ERR_EXTRACT=40
+ERR_PROCESS=50
+ERR_PUBLISH=60
 
 #####################################################
 #                                                   #
@@ -26,6 +27,7 @@ function cleanExit () {
 
   case $retval in
     $SUCCESS) msg="Processing successfully concluded";;
+    $ERR_INPUT) msg="Input is not in the form source1;source2;swath";;
     $ERR_GETDATA) msg="Error while discovering product";;
     $ERR_DOWNLOAD) msg="Failed to download product";;
     $ERR_EXTRACT) msg="Failed to extract product";;
@@ -61,23 +63,47 @@ get_data() {
 }
 
 function clean() {
-  # free space
-  rm -rf ${TMPDIR}/downloads
+  # free the used TMPDIR before next input
+  rm -rf $1/downloads $1/output
 }
 
 function main() {
   #main execution function
-  ciop-log "INFO" "downloading file $1"
-  sourceFile=$( get_data $1 ${TMPDIR}/downloads )
+  source1="$( echo "$1" | cut -d ';' -f 1 )"
+  source2="$( echo "$1" | cut -d ';' -f 2 )"
+  swath="$( echo "$1" | cut -d ';' -f 3 )"
+  TMPDIR="$2"
+
+  ciop-log "INFO" "source1: ${source1}"
+  ciop-log "INFO" "source1: ${source2}"
+  ciop-log "INFO" "swath: ${swath}"
+
+  [ ! -z "${source1}" ] || [ ! -z "${source2}" ] || [ ! -z "${swath}" ] && return ${ERR_INPUT}
+
+  ciop-log "INFO" "downloading source1"
+  source1=$( get_data "${source1}" "${TMPDIR}/downloads" )
   [ $? -ne 0 ] && return ${ERR_DOWNLOAD}
 
-  targetFile=$( echo "${sourceFile}" | sed 's#\.zip#tif#g' )
+  ciop-log "INFO" "downloading source2"
+  source2=$( get_data "${source2}" "${TMPDIR}/downloads" )
+  [ $? -ne 0 ] && return ${ERR_DOWNLOAD}
+
+  # now we can compute the target filename
+  cd "${TMPDIR}/downloads"
+  targetFile="$( ls | tr -s "_" | cut -d "_" -f 5,6 | tr '_' '\n' | sort -u | tr '\n', ',' | cut -d ',' -f 1,4 | tr ',' '_' )"
+  ciop-log "INFO" "target filename: ${targetFile}"
+
   #now we can run gpt to get our GeoTIFF
-  /usr/bin/gpt /application/dcs-template-insar-sentinel1/SAR.xml -Pmysource="${sourceFile}" -Pmytarget="${targetFile}"
+  cd ${TMPDIR}/output
+  ciop-log "INFO" "running Sentinel 1 toolbox"
+  ciop-log "DEBUG" "-Psource1=\"${source1}\" -Psource2=\"${source2}\" -Ptarget=\"${targetFile}\" -Pswath=\"${swath}\""
+  export AuxDataPath="${TMPDIR}/aux"
+  /usr/bin/gpt /application/dcs-template-insar-sentinel1/TOPSAR-Coreg-Interferometry.xml -Psource1="${source1}" -Psource2="${source2}" -Ptarget="${targetFile}" -Pswath="${swath}" 2> /dev/null
   [ $? -ne 0 ] && return ${ERR_PROCESS}
 
   #we can now publish the output
-  ciop-publish -m "${targetFile}"
+  ciop-log "INFO" "publishing output"
+  ciop-publish -m $( ls )
   [ $? -ne 0 ] && return ${ERR_PUBLISH}
 
   return $SUCCESS
@@ -92,19 +118,27 @@ function main() {
 
 
 #creating the temporary structure
-TMPDIR=${TMPDIR}/$( uuidgen )
-mkdir -p ${TMPDIR}/downloads
+#TMPDIR=${TMPDIR}/$( uuidgen )
+TMPDIR=/tmp/$( uuidgen )
 
 # loop through the files
-while read sourceFile
+while read sourceInput
 do
+    mkdir -p ${TMPDIR}/downloads
+    mkdir -p ${TMPDIR}/output
+
     #executing main on the file
-    main "${sourceFile}"
+    main "${sourceInput}" "${TMPDIR}"
     res=$?
     [ ${res} -ne 0 ] && exit ${res}
 
     #cleaning up dir
-    clean
-    exit ${SUCCESS}
+    clean "${TMPDIR}"
 done
+
+ciop-log "INFO" "cleaning up temporary directory"
+rm -rf "${TMPDIR}"
+
+ciop-log "INFO" "That's all folks!"
+exit $SUCCESS
 
