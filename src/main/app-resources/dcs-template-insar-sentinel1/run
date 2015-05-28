@@ -75,10 +75,10 @@ function main() {
   TMPDIR="$2"
 
   ciop-log "INFO" "source1: ${source1}"
-  ciop-log "INFO" "source1: ${source2}"
+  ciop-log "INFO" "source2: ${source2}"
   ciop-log "INFO" "swath: ${swath}"
 
-  [ ! -z "${source1}" ] || [ ! -z "${source2}" ] || [ ! -z "${swath}" ] && return ${ERR_INPUT}
+  [ -z "${source1}" ] || [ -z "${source2}" ] || [ -z "${swath}" ] && return ${ERR_INPUT}
 
   ciop-log "INFO" "downloading source1"
   source1=$( get_data "${source1}" "${TMPDIR}/downloads" )
@@ -96,15 +96,21 @@ function main() {
   #now we can run gpt to get our GeoTIFF
   cd ${TMPDIR}/output
   ciop-log "INFO" "running Sentinel 1 toolbox"
-  ciop-log "DEBUG" "-Psource1=\"${source1}\" -Psource2=\"${source2}\" -Ptarget=\"${targetFile}\" -Pswath=\"${swath}\""
   export AuxDataPath="${TMPDIR}/aux"
   /usr/bin/gpt /application/dcs-template-insar-sentinel1/TOPSAR-Coreg-Interferometry.xml -Psource1="${source1}" -Psource2="${source2}" -Ptarget="${targetFile}" -Pswath="${swath}" 2> /dev/null
   [ $? -ne 0 ] && return ${ERR_PROCESS}
 
   #we can now publish the output
+  ciop-log "INFO" "zipping output"
+  tar cvfz ${targetFile}.tgz ${targetFile}.dim ${targetFile}.data &> /dev/null
+  rm -rf ${targetFile}.dim ${targetFile}.data
+
   ciop-log "INFO" "publishing output"
-  ciop-publish -m $( ls )
-  [ $? -ne 0 ] && return ${ERR_PUBLISH}
+  ciop-publish -m ${TMPDIR}/output/${targetFile}.tif
+  res=$?
+  ciop-publish -m ${TMPDIR}/output/${targetFile}.tgz
+  res=$(( $res + $? ))
+  [ $res -ne 0 ] && return ${ERR_PUBLISH}
 
   return $SUCCESS
 

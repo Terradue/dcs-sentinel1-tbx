@@ -13,7 +13,7 @@
   </jobTemplates>
   <workflow id="dcs-sentinel1-tbx" title="Sentinel-1 Toolbox template" abstract="Sentinel-1 Toolbox template">
     <workflowVersion>1.0</workflowVersion>
-    <node id="node_sar">
+    <node id="node_interfero">
       <job id="dcs-template-insar-sentinel1" />
       <sources>
         <source scope="runtime" id="sourceFiles" title="Sentinel-1 source file" abstract="Sentinel-1 source file" refid="string:list">file:///tmp/S1A_IW_SLC__1SSV_20141103T195043_20141103T195057_003122_00395A_F396.zip;file:///tmp/S1A_IW_SLC__1SSV_20141127T195042_20141127T195056_003472_004117_2B48.zip;IW3</source>
