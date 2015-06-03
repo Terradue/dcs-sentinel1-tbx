@@ -68,7 +68,7 @@ function clean() {
 }
 
 function main() {
-  #main execution function
+  # main execution function
   source1="$( echo "$1" | cut -d ';' -f 1 )"
   source2="$( echo "$1" | cut -d ';' -f 2 )"
   swath="$( echo "$1" | cut -d ';' -f 3 )"
@@ -93,23 +93,53 @@ function main() {
   targetFile="$( ls | tr -s "_" | cut -d "_" -f 5,6 | tr '_' '\n' | sort -u | tr '\n', ',' | cut -d ',' -f 1,4 | tr ',' '_' )"
   ciop-log "INFO" "target filename: ${targetFile}"
 
-  #now we can run gpt to get our GeoTIFF
+  # now we can run gpt to get our dim
   cd ${TMPDIR}/output
   ciop-log "INFO" "running Sentinel 1 toolbox"
   export AuxDataPath="${TMPDIR}/aux"
   /usr/bin/gpt /application/dcs-template-insar-sentinel1/TOPSAR-Coreg-Interferometry.xml -Psource1="${source1}" -Psource2="${source2}" -Ptarget="${targetFile}" -Pswath="${swath}" 2> /dev/null
   [ $? -ne 0 ] && return ${ERR_PROCESS}
 
-  #we can now publish the output
+  # creating png/tiff for each band
+  i_band=$( grep '<BAND_NAME>i_' ${targetFile}.dim | sed 's#.*>\(i_.*\)<.*#\1#g' )
+  q_band=$( grep '<BAND_NAME>q_' ${targetFile}.dim | sed 's#.*>\(q_.*\)<.*#\1#g' )
+  c_band=$( grep '<BAND_NAME>c_' ${targetFile}.dim | sed 's#.*>\(c_.*\)<.*#\1#g' )
+  intensity_band=$( grep '<BAND_NAME>Intensity_' ${targetFile}.dim | sed 's#.*>\(Intensity_.*\)<.*#\1#g' )
+  phase_band=$( grep '<BAND_NAME>Phase_' ${targetFile}.dim | sed 's#.*>\(Phase_.*\)<.*#\1#g' )
+
+  # physical bands
+  for myband in $( echo "${i_band} ${q_band} ${c_band}" )
+  do
+    /usr/bin/gpt /application/dcs-template-insar-sentinel1/outputRealBand.xml -Psource=${targetFile}.dim -Pband=${myband}
+  done
+
+  # virtual bands
+  /usr/bin/gpt /application/dcs-template-insar-sentinel1/outputVirtualBand.xml -Psource=${targetFile}.dim -Pband=${intensity_band} -Pexpression="${i_band} * ${i_band} + ${q_band} * ${q_band}"
+  /usr/bin/gpt /application/dcs-template-insar-sentinel1/outputVirtualBand.xml -Psource=${targetFile}.dim -Pband=${phase_band} -Pexpression="atan2(${q_band},${i_band})"
+
+  # create a 10% version of the tif file
+  for myfile in $( ls *.tif )
+  do
+    basefile="$( echo ${myfile} | sed 's#\.tif##g' )"
+
+    # create a 10% version of the tif file
+    gdal_translate -outsize 10% 10% -ot Byte ${basefile}.tif ${basefile}_small.tif
+
+  done
+
+  # we can now publish the output
   ciop-log "INFO" "zipping output"
   tar cvfz ${targetFile}.tgz ${targetFile}.dim ${targetFile}.data &> /dev/null
   rm -rf ${targetFile}.dim ${targetFile}.data
 
   ciop-log "INFO" "publishing output"
-  ciop-publish -m ${TMPDIR}/output/${targetFile}.tif
-  res=$?
-  ciop-publish -m ${TMPDIR}/output/${targetFile}.tgz
-  res=$(( $res + $? ))
+  res=0
+  for myfile in $( find ${TMPDIR}/output -type f -name "*.tif" -o -name "*.tgz" )
+  do
+    ciop-publish -m ${myfile}
+    res=$(( $res + $? ))
+  done
+
   [ $res -ne 0 ] && return ${ERR_PUBLISH}
 
   return $SUCCESS

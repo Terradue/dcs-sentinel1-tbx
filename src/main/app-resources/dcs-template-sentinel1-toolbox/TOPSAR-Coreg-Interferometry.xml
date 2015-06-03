@@ -95,16 +95,6 @@
       <selectedPolarisations/>
     </parameters>
   </node>
-  <node id="Write">
-    <operator>Write</operator>
-    <sources>
-      <sourceProduct refid="TOPSAR-Deburst"/>
-    </sources>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <file>${target}.tif</file>
-      <formatName>GeoTIFF</formatName>
-    </parameters>
-  </node>
   <node id="Write(2)">
     <operator>Write</operator>
     <sources>
