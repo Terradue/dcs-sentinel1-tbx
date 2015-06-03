@@ -59,7 +59,7 @@ Or invoke the Web Processing Service via the Sandbox dashboard.
 
 This template application uses as input pairs (Master;Slave;Swath) of Sentinel 1 products. 
 
-If you run this template application using local file URLs stored on a shared folder like /tmp, pass each input pair e.g.:
+If you run this template application using local file URLs stored on a shared folder like /tmp, pass each input e.g.:
 
 ```
 file:///tmp/S1A_IW_SLC__1SSV_20141103T195043_20141103T195057_003122_00395A_F396.zip;file:///tmp/S1A_IW_SLC__1SSV_20141127T195042_20141127T195056_003472_004117_2B48.zip;IW3
