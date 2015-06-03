@@ -1,0 +1,47 @@
+<graph id="Graph">
+  <version>1.0</version>
+  <node id="Read">
+    <operator>Read</operator>
+    <sources/>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <file>${source}</file>
+    </parameters>
+  </node>
+  <node id="BandMaths">
+    <operator>BandMaths</operator>
+    <sources>
+      <sourceProduct refid="Read"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <targetBands/>
+      <variables/>
+      <bandName>${band}</bandName>
+      <bandUnit/>
+      <bandNodataValue>0.0</bandNodataValue>
+      <bandExpression>${expression}</bandExpression>
+    </parameters>
+  </node>
+  <node id="Convert-Datatype">
+    <operator>Convert-Datatype</operator>
+    <sources>
+      <sourceProduct refid="BandMaths"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <sourceBands>
+        <band>${band}</band>
+      </sourceBands>
+      <targetDataType>uint8</targetDataType>
+      <targetScalingStr>Linear (between 95% clipped histogram)</targetScalingStr>
+    </parameters>
+  </node>
+  <node id="WriteTIFF">
+    <operator>Write</operator>
+    <sources>
+      <sourceProduct refid="Convert-Datatype"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <file>${band}</file>
+      <formatName>GeoTIFF</formatName>
+    </parameters>
+  </node>
+</graph>
