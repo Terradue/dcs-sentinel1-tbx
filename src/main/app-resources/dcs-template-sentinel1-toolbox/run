@@ -103,7 +103,7 @@ function main() {
   # creating png/tiff for each band
   i_band=$( grep '<BAND_NAME>i_' ${targetFile}.dim | sed 's#.*>\(i_.*\)<.*#\1#g' )
   q_band=$( grep '<BAND_NAME>q_' ${targetFile}.dim | sed 's#.*>\(q_.*\)<.*#\1#g' )
-  c_band=$( grep '<BAND_NAME>c_' ${targetFile}.dim | sed 's#.*>\(c_.*\)<.*#\1#g' )
+  c_band=$( grep '<BAND_NAME>coh_' ${targetFile}.dim | sed 's#.*>\(coh_.*\)<.*#\1#g' )
   intensity_band=$( grep '<BAND_NAME>Intensity_' ${targetFile}.dim | sed 's#.*>\(Intensity_.*\)<.*#\1#g' )
   phase_band=$( grep '<BAND_NAME>Phase_' ${targetFile}.dim | sed 's#.*>\(Phase_.*\)<.*#\1#g' )
 
@@ -117,24 +117,28 @@ function main() {
   /usr/bin/gpt /application/dcs-template-insar-sentinel1/outputVirtualBand.xml -Psource=${targetFile}.dim -Pband=${intensity_band} -Pexpression="${i_band} * ${i_band} + ${q_band} * ${q_band}"
   /usr/bin/gpt /application/dcs-template-insar-sentinel1/outputVirtualBand.xml -Psource=${targetFile}.dim -Pband=${phase_band} -Pexpression="atan2(${q_band},${i_band})"
 
+  # we can now prepare the zipped output
+  ciop-log "INFO" "zipping output"
+  tar cvfz ${targetFile}.tgz ${targetFile}.dim ${targetFile}.data *.tif &> /dev/null
+  rm -rf ${targetFile}.dim ${targetFile}.data
+
   # create a 10% version of the tif file
   for myfile in $( ls *.tif )
   do
     basefile="$( echo ${myfile} | sed 's#\.tif##g' )"
 
-    # create a 10% version of the tif file
+    # create a 10% version of the tif file (both tif and png)
     gdal_translate -outsize 10% 10% -ot Byte ${basefile}.tif ${basefile}_small.tif
-
+    gdal_translate -outsize 10% 10% -of PNG -ot Byte -a_nodata 0 ${basefile}.tif ${basefile}_small.png
+    # retrieves the spatial info
+    listgeo -tfw ${basefile}_small.tif
+    mv ${basefile}_small.tfw ${basefile}_small.pngw
+    rm -rf ${myfile} ${basefile}_small.tif
   done
-
-  # we can now publish the output
-  ciop-log "INFO" "zipping output"
-  tar cvfz ${targetFile}.tgz ${targetFile}.dim ${targetFile}.data &> /dev/null
-  rm -rf ${targetFile}.dim ${targetFile}.data
 
   ciop-log "INFO" "publishing output"
   res=0
-  for myfile in $( find ${TMPDIR}/output -type f -name "*.tif" -o -name "*.tgz" )
+  for myfile in $( find ${TMPDIR}/output -type f -name "*.tif" -o -name "*.tgz" -o -name "*.png" -o -name "*.pngw")
   do
     ciop-publish -m ${myfile}
     res=$(( $res + $? ))

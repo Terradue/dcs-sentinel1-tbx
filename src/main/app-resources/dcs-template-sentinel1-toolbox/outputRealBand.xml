@@ -1,0 +1,60 @@
+<graph id="Graph">
+  <version>1.0</version>
+  <node id="Read">
+    <operator>Read</operator>
+    <sources/>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <file>${source}</file>
+    </parameters>
+  </node>
+  <node id="Convert-Datatype">
+    <operator>Convert-Datatype</operator>
+    <sources>
+      <sourceProduct refid="Reproject"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <sourceBands>
+        <band>${band}</band>
+      </sourceBands>
+      <targetDataType>uint8</targetDataType>
+      <targetScalingStr>Linear (between 95% clipped histogram)</targetScalingStr>
+    </parameters>
+  </node>
+  <node id="Reproject">
+    <operator>Reproject</operator>
+    <sources>
+      <sourceProduct refid="Read"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <wktFile/>
+      <crs>4326</crs>
+      <resampling>Nearest</resampling>
+      <referencePixelX/>
+      <referencePixelY/>
+      <easting/>
+      <northing/>
+      <orientation>0.0</orientation>
+      <pixelSizeX/>
+      <pixelSizeY/>
+      <width/>
+      <height/>
+      <tileSizeX/>
+      <tileSizeY/>
+      <orthorectify>false</orthorectify>
+      <elevationModelName/>
+      <noDataValue/>
+      <includeTiePointGrids>true</includeTiePointGrids>
+      <addDeltaBands>false</addDeltaBands>
+    </parameters>
+  </node>
+  <node id="WriteTIFF">
+    <operator>Write</operator>
+    <sources>
+      <sourceProduct refid="Convert-Datatype"/>
+    </sources>
+    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
+      <file>${band}</file>
+      <formatName>GeoTIFF-BigTIFF</formatName>
+    </parameters>
+  </node>
+</graph>
