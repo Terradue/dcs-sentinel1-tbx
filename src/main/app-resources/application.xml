@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="us-ascii"?>
 <application xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" id="dcs-template">
   <jobTemplates>
-    <jobTemplate id="dcs-template-insar-sentinel1">
-      <streamingExecutable>/application/dcs-template-insar-sentinel1/run</streamingExecutable>
+    <jobTemplate id="dcs-template-sentinel1-toolbox">
+      <streamingExecutable>/application/dcs-template-sentinel1-toolbox/run</streamingExecutable>
       <defaultParameters>
         <parameter id="parameter" title="Parameter sample" abstract="Example of parameter declaration" scope="test">value1</parameter>
       </defaultParameters>
@@ -14,7 +14,7 @@
   <workflow id="dcs-sentinel1-tbx" title="Sentinel-1 Toolbox template" abstract="Sentinel-1 Toolbox template">
     <workflowVersion>1.0</workflowVersion>
     <node id="node_interfero">
-      <job id="dcs-template-insar-sentinel1" />
+      <job id="dcs-template-sentinel1-toolbox" />
       <sources>
         <source scope="runtime" id="sourceFiles" title="Sentinel-1 input" abstract="Comma separated Sentinel-1 inputs in the form of source1;source2;swath,..." refid="string:list">s3://sentinel-1/2014/11/S1A_IW_SLC__1SSV_20141103T195043_20141103T195057_003122_00395A_F396.zip;s3://sentinel-1/2014/11/S1A_IW_SLC__1SSV_20141127T195042_20141127T195056_003472_004117_2B48.zip;IW3</source>
       </sources>

@@ -168,7 +168,7 @@ do
     mkdir -p ${TMPDIR}/output
 
     #executing main on the file
-    main "${sourceInput}" "${TMPDIR}"
+    main "$( echo "${sourceInput}" | sed 's#\$#\\$#g' )" "${TMPDIR}"
     res=$?
     [ ${res} -ne 0 ] && exit ${res}
 
