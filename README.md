@@ -27,19 +27,23 @@ Used in Cluster mode (a set of master and slave nodes), it supports the deployme
 
 ##### Using the releases
 
-Log on the developer cloud sandbox. Download the rpm package from https://github.com/Terradue/dcs-sentinel1-tbx/releases. 
+Log on the developer cloud sandbox. Download the rpm package from https://github.com/Terradue/dcs-sentinel1-tbx/releases (please replace \<version\> with the actual current version)
+
+```bash
+curl -L -O https://github.com/Terradue/dcs-sentinel1-tbx/releases/download/v<version>/dcs-sentinel1-tbx-<version>-ciop.x86_64.rpm
+```
 Install the dowanloaded package by running these commands in a shell:
 
 ```bash
 sudo yum -y install dcs-sentinel1-tbx-<version>-ciop.x86_64.rpm
 ```
 
-#### Using the development version
+##### Using the development version
 
 Log on the developer sandbox and run these commands in a shell:
 
 ```bash
-sudo yum -y install sentinel1-toolbox
+sudo yum -y install sentinel1-tbx
 cd
 git clone git@github.com:Terradue/dcs-sentinel1-tbx.git
 cd dcs-sentinel1-tbx
