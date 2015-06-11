@@ -27,7 +27,7 @@ Used in Cluster mode (a set of master and slave nodes), it supports the deployme
 
 ##### Using the releases
 
-Log on the developer cloud sandbox. Download the rpm package from https://github.com/Terradue/dcs-sentinel1-tbx/releases (please replace <version> with the actual current version)
+Log on the developer cloud sandbox. Download the rpm package from https://github.com/Terradue/dcs-sentinel1-tbx/releases (please replace \<version\> with the actual current version)
 
 ```bash
 curl -L -O https://github.com/Terradue/dcs-sentinel1-tbx/releases/download/v<version>/dcs-sentinel1-tbx-<version>-ciop.x86_64.rpm
