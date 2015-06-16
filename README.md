@@ -49,6 +49,19 @@ git clone git@github.com:Terradue/dcs-sentinel1-tbx.git
 cd dcs-sentinel1-tbx
 mvn install
 ```
+Note 1: you might need to configure your Sandbox for git credentials (your GitHub account credentials):
+
+```bash
+git config --global user.name "<Github user name>"
+git config --global user.email <Github user email>
+```
+
+Note 2: using the command git clone git@github.com:Terradue/dcs-sentinel1-tbx.git requires your publickey on the Sandbox. Alternatively, you can use the folowing approach, based on HTTPS, and also recommended with GitHub.
+
+```bash
+cd
+git clone https://github.com/Terradue/dcs-sentinel1-tbx.git
+```
 
 ### <a name="submit"></a>Submitting the workflow
 
