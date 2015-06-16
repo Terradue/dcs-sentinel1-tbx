@@ -97,7 +97,7 @@ function main() {
   cd ${TMPDIR}/output
   ciop-log "INFO" "running Sentinel 1 toolbox"
   export AuxDataPath="${TMPDIR}/aux"
-  /usr/bin/gpt /application/dcs-template-insar-sentinel1/TOPSAR-Coreg-Interferometry.xml -Psource1="${source1}" -Psource2="${source2}" -Ptarget="${targetFile}" -Pswath="${swath}" 2> /dev/null
+  /usr/bin/gpt /application/dcs-template-sentinel1-toolbox/TOPSAR-Coreg-Interferometry.xml -Psource1="${source1}" -Psource2="${source2}" -Ptarget="${targetFile}" -Pswath="${swath}" 2> /dev/null
   [ $? -ne 0 ] && return ${ERR_PROCESS}
 
   # creating png/tiff for each band
@@ -110,12 +110,12 @@ function main() {
   # physical bands
   for myband in $( echo "${i_band} ${q_band} ${c_band}" )
   do
-    /usr/bin/gpt /application/dcs-template-insar-sentinel1/outputRealBand.xml -Psource=${targetFile}.dim -Pband=${myband}
+    /usr/bin/gpt /application/dcs-template-sentinel1-toolbox/outputRealBand.xml -Psource=${targetFile}.dim -Pband=${myband}
   done
 
   # virtual bands
-  /usr/bin/gpt /application/dcs-template-insar-sentinel1/outputVirtualBand.xml -Psource=${targetFile}.dim -Pband=${intensity_band} -Pexpression="${i_band} * ${i_band} + ${q_band} * ${q_band}"
-  /usr/bin/gpt /application/dcs-template-insar-sentinel1/outputVirtualBand.xml -Psource=${targetFile}.dim -Pband=${phase_band} -Pexpression="atan2(${q_band},${i_band})"
+  /usr/bin/gpt /application/dcs-template-sentinel1-toolbox/outputVirtualBand.xml -Psource=${targetFile}.dim -Pband=${intensity_band} -Pexpression="${i_band} * ${i_band} + ${q_band} * ${q_band}"
+  /usr/bin/gpt /application/dcs-template-sentinel1-toolbox/outputVirtualBand.xml -Psource=${targetFile}.dim -Pband=${phase_band} -Pexpression="atan2(${q_band},${i_band})"
 
   # create a 10% version of the tif file
   for myfile in $( ls *.tif )
