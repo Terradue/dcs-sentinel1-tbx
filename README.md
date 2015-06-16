@@ -81,7 +81,7 @@ If you run this template application using local file URLs stored on a shared fo
 ```
 file:///tmp/S1A_IW_SLC__1SSV_20141103T195043_20141103T195057_003122_00395A_F396.zip;file:///tmp/S1A_IW_SLC__1SSV_20141127T195042_20141127T195056_003472_004117_2B48.zip;IW3
 ```
-as a set of comma ( , ) separated pairs.
+as a set of semicolon ( ; ) separated pairs.
 
 
 To discover and download master/slave Sentinel-1 products, use either the [ESA Sentinel-1 Scientific Data Hub](https://scihub.esa.int/dhus/) or the [Geohazards Thematic Exploitation platform](https://geohazards-tep.eo.esa.int).
