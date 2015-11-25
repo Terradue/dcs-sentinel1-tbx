@@ -40,7 +40,7 @@
       <sourceProduct refid="TOPSAR-Split"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <orbitType>Sentinel Precise (Auto Download)</orbitType>
+<orbitType>${orbit_type}</orbitType>
       <polyDegree>3</polyDegree>
     </parameters>
   </node>
@@ -50,7 +50,7 @@
       <sourceProduct refid="TOPSAR-Split(2)"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <orbitType>Sentinel Precise (Auto Download)</orbitType>
+<orbitType>${orbit_type}</orbitType>
       <polyDegree>3</polyDegree>
     </parameters>
   </node>
