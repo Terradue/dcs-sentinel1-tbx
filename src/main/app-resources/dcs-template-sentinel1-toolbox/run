@@ -62,22 +62,42 @@ get_data() {
   echo ${local_file}
 }
 
-function get_ROEORB() {
+function get_AUXORB() {
   
   local S1_ref=$1
   local aux_dest=$2
-  local startdate=$3
-  local enddate=$4
+  local orbit_type=$3
+  local startdate=$4
+  local enddate=$5
 
-  [ -z "${aux_dest}" ] && aux_dest="."
+  # aux dest must be given
+  [ -z "${aux_dest}" ] && return 1
 
-  [ -z "${startdate}" ] && startdate="$( opensearch-client "${S1_ref}" startdate)"
-
-  [ -z "${enddate}" ] && enddate="$( opensearch-client "${S1_ref}" enddate)"
-
-  aux_list=$( opensearch-client  "http://data.terradue.com/gs/catalogue/aux/gtfeature/search?q=AUX_RESORB&start=${startdate}&stop=${enddate}" enclosure )
+  [ -z "${startdate}" ] && {
+    [ "${S1_ref:0:7}" == "file://" ] || [ "${S1_ref:0:5}" == "s3://" ] && {
+      startdate=$( basename "${S1_ref}" | sed 's#.*\(201.\)\(..\)\(..\)T\(..\)\(..\)\(..\)_201..*#\1-\2-\3T\4:\5:\6.000Z#g' )
+    } || {
+      startdate="$( opensearch-client "${S1_ref}" startdate )"
+    }
+  }
+  [ -z "${enddate}" ] && {
+    [ "${S1_ref:0:7}" == "file://" ] || [ "${S1_ref:0:5}" == "s3://" ] && {
+      enddate=$( basename "${S1_ref}" | sed 's#.*201..*_\(201.\)\(..\)\(..\)T\(..\)\(..\)\(..\)_.*#\1-\2-\3T\4:\5:\6.000Z#g' )
+    } || {
+      enddate="$( opensearch-client "${S1_ref}" enddate )"
+    }
+  }
+  # now we can get the actual list
+  aux_list=$( opensearch-client  "http://data.terradue.com/gs/catalogue/aux/gtfeature/search?q=${orbit_type}&start=${startdate}&stop=${enddate}" enclosure )
 
   [ -z "${aux_list}" ] && return 1
+
+
+  # creates the aux download dir according to the toolbox fixed path
+  # e.g. ${aux_dest}/Orbits/Sentinel-1/POEORB/2015
+  aux_dest="${aux_dest}/$( echo "${startdate}" | cut -d '-' -f 1 )"
+  ciop-log "INFO" "creating aux dir in ${aux_dest}"
+  mkdir -p ${aux_dest}
 
   echo ${aux_list} | ciop-copy -o ${aux_dest} -
 
@@ -102,18 +122,27 @@ function main() {
   [ -z "${source1}" ] || [ -z "${source2}" ] || [ -z "${swath}" ] && return ${ERR_INPUT}
 
   orbit_type=$( ciop-getparam "orbit_type" )
-  [ "${orbit_type}" == "RESTITUTED" ] && {
-	get_RESORB ${source1} ${TMPDIR}/aux
-        get_RESORB ${source2} ${TMPDIR}/aux
- 	orbit_param="Sentinel Restituted" 
-  } || orbit_param="Sentinel Precise (Auto Download)" 
-  
+  case "${orbit_type}" in
+    "RESTITUTED")
+	get_AUXORB ${source1} ${TMPDIR}/aux/Orbits/Sentinel-1/RESORB "AUX_RESORB"
+        get_AUXORB ${source2} ${TMPDIR}/aux/Orbits/Sentinel-1/RESORB "AUX_RESORB"
+ 	orbit_param="Sentinel Restituted"
+    ;;
+    "PRECISE")
+      get_AUXORB ${source1} ${TMPDIR}/aux/Orbits/Sentinel-1/POEORB "AUX_POEORB"
+      get_AUXORB ${source2} ${TMPDIR}/aux/Orbits/Sentinel-1/POEORB "AUX_POEORB"
+      orbit_param="Sentinel Precise (Auto Download)" 
+    ;;
+    "PRECISE_AUTO")
+      orbit_param="Sentinel Precise  (Auto Download)"
+    ;;
+  esac
 
-  ciop-log "INFO" "downloading source1"
+  ciop-log "INFO" "downloading source1 [${source1}]"
   source1=$( get_data "${source1}" "${TMPDIR}/downloads" )
   [ $? -ne 0 ] && return ${ERR_DOWNLOAD}
 
-  ciop-log "INFO" "downloading source2"
+  ciop-log "INFO" "downloading source2 [${source2}]"
   source2=$( get_data "${source2}" "${TMPDIR}/downloads" )
   [ $? -ne 0 ] && return ${ERR_DOWNLOAD}
 
